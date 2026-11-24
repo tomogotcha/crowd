@@ -39,6 +39,7 @@ sys.path.insert(0, str(HERE / "gate"))
 import board  # noqa: E402
 import plan as gate_plan  # noqa: E402
 import scope_check  # noqa: E402
+from probes import compile as compile_probe  # noqa: E402  (cli/ is on sys.path)
 
 HOME = Path(os.environ.get("CROWD_HOME", Path.home() / ".crowd"))
 CARD = HOME / "machine-card.json"
@@ -406,6 +407,19 @@ def detect_ram_gb():
     return None
 
 
+PROBE_TAGS = {"fast_compile"}  # tags a probe owns: kept only while the probe still gives them
+
+
+def merge_probe(card, result):
+    """Merge a probe result into the card. Measured over declared: stale probe tags go."""
+    new = result.get("tags") or []
+    tags = [t for t in card.get("tags") or [] if t not in PROBE_TAGS or t in new]
+    tags += [t for t in new if t not in tags]
+    card["tags"] = tags
+    card["measured"] = {**(card.get("measured") or {}), **(result.get("measured") or {})}
+    return card
+
+
 def cmd_survey(a):
     card = load(CARD, {})
     card.update({
@@ -426,6 +440,7 @@ def cmd_survey(a):
     card.setdefault("limits", {"budget_tokens_per_day": 500000,
                                "task_types": ["research", "test", "implement", "review"],
                                "run_others_code": False})
+    merge_probe(card, compile_probe.probe())
     save(CARD, card)
     print(json.dumps(card, indent=2))
     print(f"\nSaved to {CARD}. Nothing has been sent. Edit it if anything looks wrong.")
