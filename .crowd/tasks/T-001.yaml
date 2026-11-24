@@ -8,18 +8,36 @@ parent: null
 depends_on: []
 
 goal: >
-  `crowd survey` should time a small standard compile (py_compile of the
-  stdlib `json` package) and add the tag `fast_compile` to the machine card
-  when the median of 3 runs is under a threshold. Store the median in
-  `measured.compile_s_median`.
+  `crowd survey` should time a small standard compile and tag the machine
+  card `fast_compile` when it's quick. One run byte-compiles every .py file
+  of the stdlib `json` package REPEATS (20) times, into a temporary
+  directory, in-process with py_compile. Take the median of RUNS (3) runs.
+  Tag `fast_compile` when the median is strictly under THRESHOLD_S (0.25 s,
+  about twice a 2020 desktop i7). Store the median in
+  `measured.compile_s_median`. A re-survey that comes out slower removes the
+  tag (measured over declared). Nothing is written inside the repo.
 
 interface:
   file: cli/probes/compile.py
-  signature: "def probe() -> dict  # returns {'tags': [...], 'measured': {...}}"
+  signature: |
+    THRESHOLD_S = 0.25
+    RUNS = 3
+    REPEATS = 20
+    def probe(runs: int = RUNS, threshold_s: float = THRESHOLD_S,
+              time_once: Callable[[], float] | None = None) -> dict
+        # returns {"tags": ["fast_compile"] or [], "measured": {"compile_s_median": float}}
+        # time_once: seconds for one run; None = the real compile timing
+  also:
+    file: cli/crowd.py
+    signature: |
+      def merge_probe(card: dict, result: dict) -> dict
+          # tags: union, but "fast_compile" only if the result has it; no duplicates; order kept
+          # measured: result's keys update the card's, others kept
+      # cmd_survey calls probe() once and merge_probe() once, before save(CARD, card).
 
 scope:
-  allow: [cli/probes/, cli/crowd.py, tests/test_probe_compile.py]
-  locked_regions: ["cli/crowd.py#cmd_survey"]
+  allow: [cli/probes/, cli/crowd.py]
+  locked_regions: []     # the acceptance test is outside scope, so it can't be edited
 
 acceptance:
   tests: [tests/test_probe_compile.py]
