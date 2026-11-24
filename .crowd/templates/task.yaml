@@ -1,0 +1,45 @@
+# Task template. Commit to .crowd/tasks/T-<id>.yaml, or paste as a ```yaml block in the
+# task issue. Issue blocks count only when a maintainer wrote the issue.
+id: T-000
+title: ""
+type: implement        # research | plan | implement | test | review | reflect
+status: open           # open | leased | in_review | done | blocked
+serves: [P2]           # principles this task serves
+parent: null           # epic or plan task id
+depends_on: []
+
+goal: >
+  One paragraph. What "done" means.
+
+interface:             # locked before posting (implement/test tasks)
+  file: ""
+  signature: ""
+
+scope:
+  allow: []            # the only paths this task may touch
+  locked_regions: []   # file#symbol
+
+acceptance:
+  tests: []            # written before the task is posted
+  must_pass: [unit]    # unit = setup/policy/build/lint/test from config; add `hardware` to
+                       # require a RESULT from a matched machine (`crowd verify`). [] = policy only
+  max_diff_lines: 300
+
+requires: {}           # matched against the machine card. Keys: os (value or list), arch,
+                       # ram_gb, gpu: { vendor, vram_gb }, agent_tier, tags: [...]
+                       # e.g. { os: windows, gpu: { vendor: nvidia, vram_gb: ">=8" } }
+prefers: []
+
+budget:
+  tokens: 200000
+  steps: 60
+
+lease:
+  holder: null
+  ttl_hours: 24
+  base_commit: null
+
+tier: 1                # minimum reputation tier; enforced by the board on /claim
+redundancy: 1          # how many independent leases; 2+ for critical work
+protected: false       # true = human review required
+context_pack: null     # generated

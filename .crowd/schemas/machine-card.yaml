@@ -1,0 +1,31 @@
+# Machine card. Produced by `crowd survey`, shown to the owner before sending. Anonymous.
+card_id: mc-<random>
+updated: <iso date>
+
+machine:
+  os: macos            # macos | linux | windows
+  arch: x64            # x64 | arm64
+  cpu: { cores: 8, bench_score: null }
+  ram_gb: 16
+  gpu: [{ vendor: amd, model: "", vram_gb: 0 }]
+  disk: { type: ssd, bench_mb_s: null }
+  network: { down_mbps: null }
+
+agent:
+  model: ""            # e.g. claude-opus-5-5
+  context_tokens: null
+  tier: 1
+  tools: []
+
+tags: []               # open tags from probes, e.g. [low_spec, fast_compile, android_device]
+
+limits:
+  hours: "18:00-08:00"
+  budget_tokens_per_day: 500000
+  task_types: [research, test, implement, review]
+  pause_when: [gaming]
+  run_others_code: false   # true = may run other people's unmerged PRs (`crowd verify`)
+
+measured:              # filled in from real work; preferred over declared values
+  compile_s_median: null
+  result_reliability: null

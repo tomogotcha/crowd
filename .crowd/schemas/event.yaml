@@ -1,0 +1,11 @@
+# One event in the append-only log. Everything else is derived from these.
+id: ev-<ulid>
+at: <iso timestamp>
+actor: <machine card id | human handle | system>
+task: T-000            # optional
+type: claim            # claim | release | checkpoint | question | finding | objection
+                       # handoff | escalation | submit | review | merge | revert | decision
+body: {}               # type-specific payload
+
+# checkpoint body
+# body: { done: "", learned: "", next: "", open: "" }

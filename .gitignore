@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+.crowd/work/
+.crowd/drafts/
+.claude/settings.local.json

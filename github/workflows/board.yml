@@ -1,0 +1,37 @@
+name: crowd board
+
+# Applies typed comments to the task board (labels, assignees).
+# Volunteers on forks can't edit labels; this runs with the repo's own token.
+# It always runs the default branch's code and never checks out PR code.
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: write   # to re-run the gate after a hardware result
+
+jobs:
+  board:
+    if: >-
+      github.event_name == 'issue_comment'
+      || startsWith(github.event.pull_request.head.ref, 'crowd/T-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # default branch (base), not the PR
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml
+
+      - name: Apply
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 cli/gate/board.py

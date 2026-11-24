@@ -1,0 +1,115 @@
+name: crowd gate
+
+# Project-agnostic. Runners and commands come from .crowd/config.yaml.
+# Opt-in: only PRs from crowd/T-<id> branches are gated. Other PRs skip it.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  merge_group:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: crowd-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scope:
+    if: github.event_name == 'merge_group' || startsWith(github.head_ref, 'crowd/T-')
+    runs-on: ubuntu-latest   # bookkeeping only; project code runs in the next job
+    outputs:
+      runners: ${{ steps.plan.outputs.runners }}
+      setup: ${{ steps.plan.outputs.setup }}
+      policy: ${{ steps.plan.outputs.policy }}
+      build: ${{ steps.plan.outputs.build }}
+      lint: ${{ steps.plan.outputs.lint }}
+      test: ${{ steps.plan.outputs.test }}
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml
+
+      # Run the gate code from the base commit when it exists there,
+      # so a PR can't pass by editing the gate.
+      - name: Take gate code from base
+        run: |
+          mkdir -p "$RUNNER_TEMP/gate"
+          for f in scope_check.py plan.py; do
+            git show "$BASE_SHA:cli/gate/$f" > "$RUNNER_TEMP/gate/$f" 2>/dev/null \
+              || cp "cli/gate/$f" "$RUNNER_TEMP/gate/$f"
+          done
+
+      - name: Plan (runners and commands from .crowd/config.yaml)
+        id: plan
+        run: python3 "$RUNNER_TEMP/gate/plan.py"
+
+      - name: Scope, protected paths, hardware result
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 "$RUNNER_TEMP/gate/scope_check.py" \
+            --ref "$HEAD_REF" \
+            --title "$PR_TITLE" \
+            --base "$BASE_SHA" \
+            --head HEAD
+
+  run:
+    needs: scope
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(needs.scope.outputs.runners) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        if: needs.scope.outputs.setup != ''
+        env:
+          CMD: ${{ needs.scope.outputs.setup }}
+        run: eval "$CMD"
+
+      - name: Policy
+        if: needs.scope.outputs.policy != ''
+        env:
+          CMD: ${{ needs.scope.outputs.policy }}
+        run: eval "$CMD"
+
+      - name: Build
+        if: needs.scope.outputs.build != ''
+        env:
+          CMD: ${{ needs.scope.outputs.build }}
+        run: eval "$CMD"
+
+      - name: Lint
+        if: needs.scope.outputs.lint != ''
+        env:
+          CMD: ${{ needs.scope.outputs.lint }}
+        run: eval "$CMD"
+
+      - name: Test
+        if: needs.scope.outputs.test != ''
+        env:
+          CMD: ${{ needs.scope.outputs.test }}
+        run: eval "$CMD"

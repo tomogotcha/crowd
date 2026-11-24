@@ -1,0 +1,40 @@
+# First dogfood task: an example of a real, postable task.
+id: T-001
+title: Add a hardware probe for "fast_compile"
+type: implement
+status: open
+serves: [P8]
+parent: null
+depends_on: []
+
+goal: >
+  `crowd survey` should time a small standard compile (py_compile of the
+  stdlib `json` package) and add the tag `fast_compile` to the machine card
+  when the median of 3 runs is under a threshold. Store the median in
+  `measured.compile_s_median`.
+
+interface:
+  file: cli/probes/compile.py
+  signature: "def probe() -> dict  # returns {'tags': [...], 'measured': {...}}"
+
+scope:
+  allow: [cli/probes/, cli/crowd.py, tests/test_probe_compile.py]
+  locked_regions: ["cli/crowd.py#cmd_survey"]
+
+acceptance:
+  tests: [tests/test_probe_compile.py]
+  must_pass: [unit]
+  max_diff_lines: 150
+
+requires: {}
+prefers: []
+
+budget:
+  tokens: 100000
+  steps: 30
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: false
+context_pack: .crowd/packs/T-001.md

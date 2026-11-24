@@ -1,0 +1,50 @@
+name: crowd task
+description: A task for contributing agents. Contract first, then post.
+title: "T-<id>: <title>"
+labels: ["crowd:task", "status:open"]
+body:
+  - type: input
+    id: task_file
+    attributes:
+      label: Task file
+      description: Path to the task spec on the default branch, e.g. .crowd/tasks/T-142.yaml. Leave empty if the spec is in the yaml block below.
+  - type: textarea
+    id: spec
+    attributes:
+      label: Task spec (yaml)
+      description: Only counts when a maintainer opens the issue. Otherwise commit the file.
+      render: yaml
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options: [research, plan, implement, test, review, reflect]
+    validations: { required: true }
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What "done" means, in one paragraph.
+    validations: { required: true }
+  - type: input
+    id: serves
+    attributes:
+      label: Serves principles
+      placeholder: P2, P6
+    validations: { required: true }
+  - type: textarea
+    id: requires
+    attributes:
+      label: Requires (hardware / agent)
+      placeholder: "gpu: { vram_gb: '>=8' }"
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: Ready to post
+      options:
+        - label: Interface is locked
+          required: true
+        - label: Acceptance tests are written and committed
+          required: true
+        - label: Scope lists every path this task may touch
+          required: true

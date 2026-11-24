@@ -1,0 +1,35 @@
+# Project config. Maps this project's tools to crowd's needs.
+# The gate reads this from the BASE branch, so a PR can't change its own checks.
+project: crowd
+repo: ""               # owner/name of the repo with the task board; empty = this repo (or its parent, if a fork)
+brief: BRIEF.md
+principles: PRINCIPLES.md
+
+ci:
+  runners: [ubuntu-latest]   # any GitHub runner labels, e.g. [windows-latest] or [ubuntu-latest, macos-latest]
+
+commands:              # run by `crowd check` and by the gate, in this order
+  setup: "pip install pyyaml"
+  policy: ""           # the project's own content check, e.g. "cargo xtask policy"
+  build: "python3 -m py_compile cli/crowd.py cli/gate/scope_check.py cli/gate/plan.py cli/gate/board.py"
+  lint: ""
+  test: "python3 cli/crowd.py selftest"
+  hardware: ""         # run by `crowd verify` on a matched machine, for tasks with `hardware` in must_pass
+  affected: ""         # e.g. "nx show projects --affected"
+
+policy:                # built-in content checks on every crowd PR
+  forbid: []           # globs no PR may add or change, e.g. ["*.bin", "dumps/"]
+  max_file_kb: 512
+
+protected_paths:       # added to the built-in list (.github/, PRINCIPLES.md, cli/gate/, .crowd/policy/, .crowd/config.yaml)
+  - .github/
+  - PRINCIPLES.md
+  - cli/gate/
+  - .crowd/policy/
+
+labels:
+  task: "crowd:task"
+  status_prefix: "status:"
+
+checkpoint_every_steps: 10
+lease_ttl_hours: 24

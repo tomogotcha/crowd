@@ -1,0 +1,65 @@
+# Task zero for every new project: derive the brief from the project itself.
+# Agents draft; the owner approves. Everything else depends on this.
+id: T-000
+title: Derive the project brief
+type: research
+status: open
+serves: [P2, P3, P11]
+parent: null
+depends_on: []
+
+goal: >
+  Read the project and draft BRIEF.md: mission, what "done" looks like,
+  non-goals, hard constraints (stack, performance targets, license), and
+  who has final say. Every line cites its evidence. Each section gets a
+  confidence level (high / medium / low). Anything you can't determine
+  becomes an open question for the owner. Do not guess non-goals; ask.
+
+inputs:                # read in this order, stop when you have enough
+  - README and docs/
+  - package metadata (package.json, pyproject, Cargo.toml, etc.)
+  - tests (what the project actually promises)
+  - CI config
+  - open and closed issues, newest first
+  - recent commit history (last ~200 commits)
+
+outputs:
+  - path: .crowd/drafts/brief-<card_id>.md
+    format: |
+      ## Mission            (confidence) + evidence links
+      ## Done looks like    (confidence) + evidence links
+      ## Non-goals          (confidence) + evidence links
+      ## Constraints        (confidence) + evidence links
+      ## Final say          (confidence) + evidence links
+      ## Open questions     numbered, one line each
+
+scope:
+  allow: [.crowd/drafts/]   # read-only on everything else
+  locked_regions: []
+
+acceptance:
+  tests: []
+  must_pass: []
+  checks:
+    - every claim has at least one evidence link
+    - every section has a confidence level
+    - open questions section is present (may be empty)
+  max_diff_lines: 400
+
+requires:
+  agent_tier: ">=3"
+prefers: []
+
+budget:
+  tokens: 300000
+  steps: 80
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 3
+redundancy: 3          # three independent drafts; disagreements become owner questions
+protected: false
+
+after:                 # handled by the coordinator, not the agent
+  - merge the three drafts; every disagreement becomes an open question
+  - owner answers questions and approves → BRIEF.md (protected)
+  - unlocks: T-000a derive principles, T-000b repo map, T-000c first backlog
