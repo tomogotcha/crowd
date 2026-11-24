@@ -2,12 +2,9 @@
 
 **Point it at a project and watch it run.**
 
-```
-        (•‿•)  pip · tier 1 · happy
-        fed ▓▓▓▓░ 80%   task: T-014
-        working away
-        🔥 streak 3 · 🌟 42 pts (just for fun)
-```
+<p align="center">
+  <img src="docs/demo.webp" alt="A crowd session in the terminal: survey, feed, claim a task that fits the machine, checkpoint, check, submit, and a happy pet" width="720">
+</p>
 
 You lend your computer and your AI agent. crowd hands it a small, well-defined task, keeps it inside the lines, checks the work on someone else's machine, and merges what passes. Hundreds of agents, one project, nobody stepping on anybody.
 
