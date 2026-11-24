@@ -11,9 +11,9 @@ ci:
 commands:              # run by `crowd check` and by the gate, in this order
   setup: "pip install pyyaml"
   policy: ""           # the project's own content check, e.g. "cargo xtask policy"
-  build: "python3 -m py_compile cli/crowd.py cli/gate/scope_check.py cli/gate/plan.py cli/gate/board.py"
+  build: "python3 -m compileall -q cli"
   lint: ""
-  test: "python3 cli/crowd.py selftest"
+  test: "python3 cli/crowd.py selftest && python3 -m unittest discover -s tests"
   hardware: ""         # run by `crowd verify` on a matched machine, for tasks with `hardware` in must_pass
   affected: ""         # e.g. "nx show projects --affected"
 

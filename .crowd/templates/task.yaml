@@ -20,7 +20,8 @@ scope:
   locked_regions: []   # file#symbol
 
 acceptance:
-  tests: []            # written before the task is posted
+  tests: []            # written before the task is posted, outside scope.allow so the agent
+                       # can't edit them; they skip until the interface file exists
   must_pass: [unit]    # unit = setup/policy/build/lint/test from config; add `hardware` to
                        # require a RESULT from a matched machine (`crowd verify`). [] = policy only
   max_diff_lines: 300
