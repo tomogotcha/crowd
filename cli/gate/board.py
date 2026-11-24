@@ -9,6 +9,8 @@ So the CLI only posts typed comments, and this script (run by
   /release      on a task issue  -> unassign + status:open
   QUESTION: / OBJECTION:         -> status:blocked
   PR opened from crowd/T-<id>    -> status:in_review
+  that PR merged                 -> status:done
+  that PR closed unmerged        -> status:leased (lease still held) or status:open
   RESULT: pass|fail on a PR      -> re-run the gate, which reads the result
 
 Leases are decided from the comment history in order, never from who the
@@ -153,11 +155,27 @@ def on_pr_comment(repo, issue, comment):
         say(repo, issue["number"], "Result recorded. Couldn't re-run the gate automatically; re-run it by hand.")
 
 
-def on_pr_opened(repo, pr):
+def status_after_pr(action, merged, assigned):
+    """Task status for a crowd PR event. None = leave it alone."""
+    if action in ("opened", "reopened"):
+        return "in_review"
+    if action == "closed":
+        if merged:
+            return "done"
+        return "leased" if assigned else "open"
+    return None
+
+
+def on_pr_event(repo, pr, action):
     tid = task_id_from(pr["head"]["ref"])
-    issue = scope_check.find_task_issue(repo, tid, "open") if tid else None
-    if issue:
-        set_status(repo, issue["number"], "in_review", issue["labels"])
+    # "all": a merge with "closes #N" may have closed the issue already.
+    issue = scope_check.find_task_issue(repo, tid, "all") if tid else None
+    if not issue:
+        return
+    new = status_after_pr(action, pr.get("merged"), bool(issue.get("assignees")))
+    if new:
+        set_status(repo, issue["number"], new, issue["labels"])
+        print(f"{tid}: PR #{pr['number']} {action} -> status:{new}")
 
 
 def main():
@@ -171,7 +189,7 @@ def main():
         elif any(label["name"] == scope_check.TASK_LABEL for label in issue.get("labels") or []):
             on_task_comment(repo, issue, comment)
     elif name == "pull_request_target":
-        on_pr_opened(repo, event["pull_request"])
+        on_pr_event(repo, event["pull_request"], event.get("action"))
     return 0
 
 

@@ -762,6 +762,14 @@ def cmd_selftest(a):
     assert board.decide_claim(t3x, log3, "y", "MEMBER") == (True, "", "open")
     log3.append(c("z", "COLLABORATOR"))
     assert board.decide_claim(t3x, log3, "z", "COLLABORATOR")[2] == "leased"
+    # board: task status follows its PR
+    assert board.status_after_pr("opened", False, True) == "in_review"
+    assert board.status_after_pr("reopened", False, True) == "in_review"
+    assert board.status_after_pr("closed", True, True) == "done"
+    assert board.status_after_pr("closed", True, False) == "done"
+    assert board.status_after_pr("closed", False, True) == "leased"
+    assert board.status_after_pr("closed", False, False) == "open"
+    assert board.status_after_pr("synchronize", False, True) is None
     assert board.decide_result("RESULT: pass\ncommit: abc1234", sha, "v", "CONTRIBUTOR", "a") == (True, "")
     assert board.decide_result("RESULT: pass", sha, "v", "CONTRIBUTOR", "a")[0] is False
     assert board.decide_result("RESULT: pass\ncommit: abc1234", sha, "a", "OWNER", "a")[0] is False

@@ -19,4 +19,4 @@ Steps 1–2 and a basic 3 run in `.github/workflows/gate.yml`: a scope job, then
 
 Work CI can't check (a real GPU, a device, data only volunteers have) uses `hardware` in `must_pass`: a matched machine runs `crowd verify <pr>` and posts `RESULT: pass|fail` for the head commit, and the gate re-runs and reads it.
 
-Labels and leases are applied by `.github/workflows/board.yml` from typed comments, so contributors on forks need no write access. Merge queue uses GitHub's built-in merge queue. Review and regression are manual until v1.
+Labels and leases are applied by `.github/workflows/board.yml` from typed comments and crowd PR events (opened → `in_review`, merged → `done`), so contributors on forks need no write access. Merge queue uses GitHub's built-in merge queue. Review and regression are manual until v1.
