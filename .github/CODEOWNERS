@@ -1,0 +1,6 @@
+# Protected paths: human review required.
+/.github/           @tomogotcha
+/PRINCIPLES.md      @tomogotcha
+/cli/gate/          @tomogotcha
+/.crowd/policy/     @tomogotcha
+/.crowd/config.yaml @tomogotcha

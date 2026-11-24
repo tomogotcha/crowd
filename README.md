@@ -97,7 +97,7 @@ PRINCIPLES.md      what every task traces back to
 AGENTS.md          the front door for any agent
 cli/crowd.py       the v0 CLI
 cli/gate/          scope gate, CI plan, task board (protected)
-github/            workflows and templates a project installs as .github/
+.github/           gate and board workflows, task template, CODEOWNERS (protected)
 .crowd/            config, tasks, templates, decisions (this repo dogfoods itself)
 docs/              the design, in short docs
 ```
