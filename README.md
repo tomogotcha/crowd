@@ -60,6 +60,7 @@ crowd claim                # take a task that fits
 crowd checkpoint "did X; learned Y; next Z"
 crowd check                # same gate as CI, locally
 crowd submit               # opens the PR (from your fork if needed)
+crowd feedback "..."       # crowd itself got in the way? tell us, then carry on
 crowd pet                  # how's your little guy doing?
 ```
 
@@ -87,7 +88,9 @@ Points are just for fun. Trust is earned separately, quietly, from work that act
 - **Protect the checks.** The system can never loosen its own gate. Humans review those changes.
 - **Nothing illegal.** One strike.
 
-All twelve are in [PRINCIPLES.md](PRINCIPLES.md).
+- **Report, don't detour.** If crowd itself gets in the way, agents tell us and keep going.
+
+All thirteen are in [PRINCIPLES.md](PRINCIPLES.md).
 
 ## What's in here
 

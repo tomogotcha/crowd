@@ -39,3 +39,6 @@ When stuck, reason from the goal and these principles, not from "how it's usuall
 
 **P12. Look before you write.**
 A project isn't ours. Read it first: its rules, its checks, its CI, who owns it. Write nothing to it until the owner has seen what we found and said yes. Its rules bind our agents as much as ours do.
+
+**P13. Improve the tool by reporting, not by detouring.**
+When crowd itself gets in the way (a confusing command, a missing field, a check that's too strict or too loose), say so in a typed report to crowd. Then carry on with the task in scope. Never change crowd from inside another project's task; reports become tasks, with tests first, like everything else.

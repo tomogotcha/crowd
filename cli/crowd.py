@@ -16,6 +16,7 @@ with no write access, can take part.
   crowd check                  scope gate + policy + tests, same as CI
   crowd submit                 push (to your fork if needed) and open the PR
   crowd verify <pr> [--dry-run]   run someone else's PR on this machine, post RESULT
+  crowd feedback "text"        report a problem with crowd itself to crowd's repo (P13)
   crowd pet                    see how your agent is doing
   crowd feed <tokens>          set today's token budget
   crowd eat <tokens>           log tokens used (until agents report it themselves)
@@ -46,6 +47,10 @@ CARD = HOME / "machine-card.json"
 STATE = HOME / "state.json"
 TASK_LABEL = scope_check.TASK_LABEL
 WRITE_ROLES = {"ADMIN", "MAINTAIN", "WRITE"}
+CROWD_VERSION = "0.1.0"
+FEEDBACK_REPO = os.environ.get("CROWD_TOOL_REPO", "tomogotcha/crowd")  # crowd's own repo
+FEEDBACK_LABEL = "crowd:feedback"
+FEEDBACK_KINDS = ["friction", "bug", "idea"]
 
 
 # ---------- helpers ----------
@@ -644,6 +649,70 @@ def cmd_verify(a):
         print(f"\nPosted on PR #{a.pr}.")
 
 
+# ---------- feedback (P13) ----------
+
+def tool_version():
+    sha = run(["git", "-C", str(HERE), "rev-parse", "--short", "HEAD"], check=False)
+    return f"{CROWD_VERSION}+{sha}" if sha else CROWD_VERSION
+
+
+def feedback_issue(kind, text, ctx, share=False):
+    """Return (title, body). Nothing about the project unless share is True."""
+    first = " ".join(text.strip().splitlines()[0].split()) if text.strip() else "(empty)"
+    title = f"FEEDBACK ({kind}): {first[:70]}{'…' if len(first) > 70 else ''}"
+    lines = [
+        f"**Kind:** {kind}",
+        f"**crowd:** {ctx.get('version', 'unknown')}",
+        f"**OS:** {ctx.get('os', 'unknown')}",
+    ]
+    if ctx.get("command"):
+        lines.append(f"**While running:** `crowd {ctx['command']}`")
+    if ctx.get("task_type"):
+        lines.append(f"**Task type:** {ctx['task_type']}")
+    if share and ctx.get("project"):
+        lines.append(f"**Project:** {ctx['project']}" + (f", task {ctx['task']}" if ctx.get("task") else ""))
+    else:
+        lines.append("**Project:** not shared")
+    return title, ("\n".join(lines) + f"\n\n{text.strip()}\n\n---\n"
+                   "Filed with `crowd feedback` (P13). Maintainers turn reports into tasks, tests first.")
+
+
+def feedback_context(a):
+    ctx = {"version": tool_version(), "os": platform.system().lower(), "command": a.command}
+    st = load(STATE, {})
+    tid = st.get("task")
+    if tid:
+        ctx.update({"task": tid, "project": st.get("repo")})
+        try:
+            ctx["task_type"] = scope_check.load_task(tid, "HEAD")[0].get("type")
+        except (LookupError, subprocess.CalledProcessError, Exception):
+            pass
+    return ctx
+
+
+def cmd_feedback(a):
+    title, body = feedback_issue(a.kind, a.text, feedback_context(a), a.share)
+    print(f"To {FEEDBACK_REPO}:\n\n{title}\n\n{body}\n")
+    if a.dry_run:
+        print("(dry run: not filed)")
+        return
+    need("gh")
+    out = run(["gh", "issue", "list", "-R", FEEDBACK_REPO, "--state", "open", "--search", f"{title} in:title",
+               "--json", "number,title", "--limit", "10"], check=False)
+    same = [i for i in json.loads(out or "[]") if i["title"] == title]
+    if same:
+        run(["gh", "issue", "comment", str(same[0]["number"]), "-R", FEEDBACK_REPO, "--body", f"+1\n\n{body}"])
+        print(f"Same report already open: added to #{same[0]['number']}. Carry on with your task.")
+        return
+    args = ["gh", "issue", "create", "-R", FEEDBACK_REPO, "--title", title, "--body", body]
+    r = subprocess.run(args + ["--label", FEEDBACK_LABEL], capture_output=True, text=True)
+    if r.returncode != 0:  # no permission to label, or the label is missing: file it unlabelled
+        r = subprocess.run(args, capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit(f"error: couldn't file feedback\n{r.stderr.strip()}")
+    print(f"Filed: {r.stdout.strip()}. Thanks. Carry on with your task.")
+
+
 # ---------- pet ----------
 
 def mood(st):
@@ -797,6 +866,16 @@ def cmd_selftest(a):
     assert gate_plan.plan({"ci": {"runners": "macos-latest"}})["runners"] == '["macos-latest"]'
     # ready: runner detection
     assert runners_from_workflow("jobs:\n  a:\n    runs-on: windows-latest\n  b:\n    runs-on: ubuntu-22.04") == ["ubuntu-22.04", "windows-latest"]
+    # feedback: private by default
+    ctx = {"version": "0.1.0+abc", "os": "linux", "command": "claim", "task_type": "implement",
+           "project": "someone/private-ish", "task": "T-9"}
+    title, body = feedback_issue("bug", "claim prints the id twice\nmore detail", ctx)
+    assert title == "FEEDBACK (bug): claim prints the id twice"
+    assert "someone/private-ish" not in body and "T-9" not in body and "not shared" in body
+    assert "`crowd claim`" in body and "implement" in body and "more detail" in body
+    assert "someone/private-ish, task T-9" in feedback_issue("bug", "x", ctx, share=True)[1]
+    long_title = feedback_issue("idea", "y" * 100, {})[0]
+    assert long_title.endswith("…") and len(long_title) < 100
     # pet
     assert mood({"budget": 100, "used": 90})[0] == "hungry"
     assert mood({"budget": 100, "used": 100})[0] == "napping"
@@ -820,6 +899,11 @@ def main():
     p = sub.add_parser("check"); p.add_argument("--base"); p.add_argument("--offline", action="store_true"); p.set_defaults(f=cmd_check)
     p = sub.add_parser("submit"); p.add_argument("--summary"); p.add_argument("--missing"); p.set_defaults(f=cmd_submit)
     p = sub.add_parser("verify"); p.add_argument("pr", type=int); p.add_argument("--dry-run", action="store_true"); p.set_defaults(f=cmd_verify)
+    p = sub.add_parser("feedback", help="report a problem with crowd itself (P13)")
+    p.add_argument("text"); p.add_argument("--kind", choices=FEEDBACK_KINDS, default="friction")
+    p.add_argument("--command", help="the crowd command you were running, e.g. claim")
+    p.add_argument("--share", action="store_true", help="include the project and task id")
+    p.add_argument("--dry-run", action="store_true"); p.set_defaults(f=cmd_feedback)
     p = sub.add_parser("pet"); p.add_argument("--name"); p.set_defaults(f=cmd_pet)
     p = sub.add_parser("feed"); p.add_argument("tokens", type=int); p.set_defaults(f=cmd_feed)
     p = sub.add_parser("eat"); p.add_argument("tokens", type=int); p.set_defaults(f=cmd_eat)

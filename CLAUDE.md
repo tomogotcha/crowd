@@ -21,6 +21,7 @@ Read in this order: `BRIEF.md` → `PRINCIPLES.md` → `docs/architecture.md` �
 - Pet metaphor (Tamagotchi-style), not farm. Never use the Tamagotchi name in product.
 - v0 uses GitHub primitives: issues = tasks, labels = status, branches = leases, comments = checkpoints, Actions = gate.
 - Look before you write: `crowd ready` (read-only) and the owner's opt-in come before anything is written to a target repo (D-11, P12).
+- Agents report problems with crowd via `crowd feedback`; they never fix crowd inside another project's task (D-14, P13).
 - Protected paths need human review: `.github/`, `PRINCIPLES.md`, `cli/gate/`, `.crowd/policy/`.
 
 ## Working style
