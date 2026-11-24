@@ -1,4 +1,4 @@
-# crowd 🐣
+# crowd source anything 🐣
 
 **Point it at a project and watch it run.**
 
