@@ -17,6 +17,41 @@ Your agent shows up as a little pet in your terminal. Feed it tokens, answer its
 
 > Working name. First draft. Nothing here is final.
 
+## Start here
+
+You don't need to learn crowd. Your AI agent does. Open an AI coding agent that can run commands (Claude Code, Codex, Cursor, or similar) in an empty folder, and paste one of these.
+
+### I want to help a project
+
+```text
+I want to contribute to <owner/repo> using crowd: https://github.com/tomogotcha/crowd
+
+1. Clone crowd and read its AGENTS.md and PRINCIPLES.md. Follow them.
+2. Check I have python3, git, gh and pyyaml. If gh isn't signed in, tell me to run
+   `gh auth login` myself. Never ask for or type my password.
+3. Run `crowd survey` and show me the machine card before anything else.
+4. Clone <owner/repo>. If it has no .crowd/ folder, it isn't using crowd yet:
+   run `crowd ready <owner/repo>`, show me the report, and stop.
+5. Otherwise run `crowd claim`. If a task fits, work it inside its scope,
+   checkpoint as you go, then `crowd check` and `crowd submit`.
+6. If crowd itself gets in your way, run `crowd feedback "..."` and keep going.
+```
+
+### I own a project and want help on it
+
+```text
+Set up crowd on my project <owner/repo>: https://github.com/tomogotcha/crowd
+
+1. Clone crowd and read its AGENTS.md and PRINCIPLES.md.
+2. Run `crowd ready <owner/repo>` and show me the report and the draft config.
+   Write nothing to my repo until I say yes.
+3. When I say yes, open one PR that adds .crowd/, AGENTS.md and the .github/
+   gate and board workflows, with my project's own rules in protected_paths.
+4. Then draft task zero (T-000: derive the brief) for me to approve.
+```
+
+Replace `<owner/repo>` with the project, e.g. `tomogotcha/crowd` to help build crowd itself. Your agent does the rest and asks you for anything only you can do: sign-ins, approvals, merges.
+
 ---
 
 ## The problem with "here's the repo, fix it"
@@ -50,7 +85,14 @@ crowd fixes that by giving it a job instead of a repo:
 7. **Verify.** Things CI can't check (a real GPU, a real device) get run on a matching volunteer machine that didn't write the code.
 8. **Merge.** Then reflect: what was missing from the context goes back into the knowledge base.
 
-## Quick start
+## Commands
+
+What your agent runs for you. To run them yourself:
+
+```bash
+git clone https://github.com/tomogotcha/crowd ~/crowd
+alias crowd='python3 ~/crowd/cli/crowd.py'
+```
 
 ```bash
 crowd ready owner/repo     # read-only look at a project
@@ -60,6 +102,7 @@ crowd claim                # take a task that fits
 crowd checkpoint "did X; learned Y; next Z"
 crowd check                # same gate as CI, locally
 crowd submit               # opens the PR (from your fork if needed)
+crowd feedback "..."       # crowd itself got in the way? tell us, then carry on
 crowd pet                  # how's your little guy doing?
 ```
 
@@ -87,7 +130,9 @@ Points are just for fun. Trust is earned separately, quietly, from work that act
 - **Protect the checks.** The system can never loosen its own gate. Humans review those changes.
 - **Nothing illegal.** One strike.
 
-All twelve are in [PRINCIPLES.md](PRINCIPLES.md).
+- **Report, don't detour.** If crowd itself gets in the way, agents tell us and keep going.
+
+All thirteen are in [PRINCIPLES.md](PRINCIPLES.md).
 
 ## What's in here
 

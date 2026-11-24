@@ -7,6 +7,7 @@
 - `cli/gate/plan.py` *(protected)*: turns `.crowd/config.yaml` into the gate's runners and commands. No language or OS is built in.
 - `cli/gate/board.py` *(protected)*: the only writer of labels and assignees. Applies `/claim`, `/release`, `QUESTION:`, `RESULT:` comments, and crowd PRs opening (in_review), merging (done) or closing unmerged (back to leased, or open if nobody holds it). Enforces tier and redundancy.
 - `crowd ready` is read-only by design (D-11): it must never write to the target repo.
+- `crowd feedback` files issues in crowd's own repo (`CROWD_TOOL_REPO`, default `tomogotcha/crowd`), never in the project. No project details unless `--share` (D-14).
 - `cli/probes/` *(planned)*: one file per capability probe, each `probe() -> {tags, measured}`.
 
 **State on the user's machine:** `~/.crowd/machine-card.json`, `~/.crowd/state.json` (pet, budget).
