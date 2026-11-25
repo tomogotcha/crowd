@@ -1,0 +1,47 @@
+# From report #13.
+id: T-005
+title: Windows setup in the README
+type: implement
+status: open
+serves: [P13]
+parent: null
+depends_on: []
+
+goal: >
+  On Windows `python3` is often the Microsoft Store stub, so the README's
+  setup fails there. Under "## Commands", after the macOS/Linux alias, add an
+  "#### On Windows" part that sets crowd up with the py launcher in
+  PowerShell (`function crowd { py -3 $HOME\crowd\cli\crowd.py @args }`) and
+  says in one line why. In the "I want to help a project" prompt, step 2
+  becomes "Check I have python3 (on Windows: `py -3`), git, gh and pyyaml."
+  Keep it short; no other README changes.
+
+interface:
+  file: README.md
+  signature: |
+    ## Commands
+      ... existing alias block, unchanged ...
+      #### On Windows        <- new; uses `py -3` and crowd.py, never `python3 `
+    Start-here prompt step 2 mentions `py -3`.
+
+scope:
+  allow: [README.md]
+  locked_regions: []
+
+acceptance:
+  tests: [tests/test_readme_windows.py]
+  must_pass: [unit]
+  max_diff_lines: 20
+
+requires: {}
+prefers: []
+
+budget:
+  tokens: 30000
+  steps: 10
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: false
+context_pack: .crowd/packs/T-005.md

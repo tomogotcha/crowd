@@ -1,0 +1,51 @@
+# From report #14. Needs a Windows machine to try the real thing.
+id: T-004
+title: Read RAM on Windows in crowd survey
+type: implement
+status: open
+serves: [P8, P13]
+parent: null
+depends_on: []
+
+goal: >
+  `crowd survey` leaves machine.ram_gb null on Windows, because detect_ram_gb
+  only knows macOS sysctl and /proc/meminfo. Add windows_ram_bytes(), which
+  asks Windows for total physical memory with ctypes (kernel32
+  GlobalMemoryStatusEx; no new dependencies, no subprocess), and returns None
+  on any other OS. detect_ram_gb takes the OS and the reader as arguments so
+  the gate can test it on Linux. macOS and Linux keep working as today.
+  Before submitting, run `crowd survey` on this Windows machine and put the
+  ram_gb it printed in the PR.
+
+interface:
+  file: cli/crowd.py
+  signature: |
+    def windows_ram_bytes() -> int | None
+        # total physical memory in bytes on Windows; None elsewhere or on failure
+    def detect_ram_gb(system: str | None = None,
+                      windows_bytes: Callable[[], int | None] | None = None) -> int | None
+        # system: None = platform.system(); windows_bytes: None = windows_ram_bytes
+        # Windows: round(bytes / 2**30), None if the reader gives None or raises
+        # cmd_survey still calls detect_ram_gb() with no arguments
+
+scope:
+  allow: [cli/crowd.py]
+  locked_regions: []
+
+acceptance:
+  tests: [tests/test_ram_windows.py]
+  must_pass: [unit]
+  max_diff_lines: 60
+
+requires: { os: windows }
+prefers: []
+
+budget:
+  tokens: 80000
+  steps: 25
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: false
+context_pack: .crowd/packs/T-004.md

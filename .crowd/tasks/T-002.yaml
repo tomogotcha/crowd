@@ -1,0 +1,47 @@
+# From report #8.
+id: T-002
+title: Print the task id once when claiming
+type: implement
+status: open
+serves: [P13]
+parent: null
+depends_on: []
+
+goal: >
+  `crowd claim` prints "Claimed T-001: T-001: Add a hardware probe..." because
+  the issue title already starts with the id. Add task_label(tid, title) and
+  use it in that line, so the id shows once: "Claimed T-001: Add a hardware
+  probe...". A title that doesn't start with the id gets it in front. Only a
+  leading copy of this task's own id is dropped, with any ":", "-" or spaces
+  right after it.
+
+interface:
+  file: cli/crowd.py
+  signature: |
+    def task_label(tid: str, title: str) -> str
+        # "T-001", "T-001: Add x" -> "T-001: Add x"
+        # "T-001", "Add x"        -> "T-001: Add x"
+        # "T-001", "" or "T-001"  -> "T-001"
+    # cmd_claim prints f"Claimed {task_label(tid, issue['title'])}  (base ...)"
+
+scope:
+  allow: [cli/crowd.py]
+  locked_regions: []
+
+acceptance:
+  tests: [tests/test_claim_label.py]
+  must_pass: [unit]
+  max_diff_lines: 40
+
+requires: {}
+prefers: []
+
+budget:
+  tokens: 50000
+  steps: 15
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: false
+context_pack: .crowd/packs/T-002.md
