@@ -129,6 +129,20 @@ def current_task():
     return tid
 
 
+def current_branch():
+    """`git branch --show-current`, or None outside a repo / on a detached HEAD. Never exits."""
+    try:
+        return run(["git", "branch", "--show-current"], check=False) or None
+    except OSError:
+        return None
+
+
+def active_task(st, branch):
+    """The state's task, but only while on its crowd/<id> branch (report #9)."""
+    tid = st.get("task")
+    return tid if tid and branch == f"crowd/{tid}" else None
+
+
 def task_label(tid, title):
     """The id once, then the title. Drops only a leading copy of this tid (and any
     ":", "-" or spaces after it); "T-0010: x" is a different id and stays."""
@@ -689,7 +703,7 @@ def feedback_issue(kind, text, ctx, share=False):
 def feedback_context(a):
     ctx = {"version": tool_version(), "os": platform.system().lower(), "command": a.command}
     st = load(STATE, {})
-    tid = st.get("task")
+    tid = active_task(st, current_branch())
     if tid:
         ctx.update({"task": tid, "project": st.get("repo")})
         try:
@@ -760,7 +774,8 @@ def cmd_pet(a):
     if a.name:
         st["name"] = a.name
         save(STATE, st)
-    print(render_pet(st))
+    shown = st if active_task(st, current_branch()) else {**st, "task": "no task"}
+    print(render_pet(shown))
 
 
 def cmd_feed(a):
