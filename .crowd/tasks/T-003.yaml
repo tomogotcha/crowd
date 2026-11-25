@@ -1,0 +1,48 @@
+# From report #9. Same file as T-002, so it waits for T-002 to merge.
+id: T-003
+title: Stop showing a finished task in feedback and pet
+type: implement
+status: open
+serves: [P13, P1]
+parent: null
+depends_on: [T-002]
+
+goal: >
+  ~/.crowd/state.json keeps the last task after its PR merges, so `crowd
+  feedback` reports a stale task type and `crowd pet` shows a finished task.
+  A task now counts only while you are on its crowd/<id> branch. Add
+  current_branch() and active_task(st, branch). feedback_context leaves out
+  task, project and task type unless active_task gives the task. cmd_pet
+  shows "no task" unless active_task gives it. Nothing is deleted from the
+  state file, and just looking (`crowd pet`) never writes it.
+
+interface:
+  file: cli/crowd.py
+  signature: |
+    def current_branch() -> str | None
+        # `git branch --show-current`; None outside a repo or on a detached HEAD. Never exits.
+    def active_task(st: dict, branch: str | None) -> str | None
+        # st["task"] if branch == f"crowd/{st['task']}", else None
+    # feedback_context and cmd_pet call active_task(st, current_branch())
+
+scope:
+  allow: [cli/crowd.py]
+  locked_regions: []
+
+acceptance:
+  tests: [tests/test_active_task.py]
+  must_pass: [unit]
+  max_diff_lines: 60
+
+requires: {}
+prefers: []
+
+budget:
+  tokens: 80000
+  steps: 25
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: false
+context_pack: .crowd/packs/T-003.md
