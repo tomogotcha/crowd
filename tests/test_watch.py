@@ -20,10 +20,11 @@ def issue(n, title, labels, updated="2026-11-24T11:00:00Z"):
     return {"number": n, "title": title, "labels": [{"name": x} for x in labels], "updatedAt": updated, "url": ""}
 
 
-def pr(n, files, checks, draft=False):
+def pr(n, files, checks, draft=False, closes=()):
     return {"number": n, "title": f"PR {n}", "isDraft": draft, "url": "",
             "files": [{"path": f} for f in files],
-            "statusCheckRollup": [{"conclusion": c} for c in checks]}
+            "statusCheckRollup": [{"conclusion": c} for c in checks],
+            "closingIssuesReferences": [{"number": i} for i in closes]}
 
 
 def keys(snap):
@@ -57,6 +58,26 @@ class Attention(unittest.TestCase):
             pr(5, ["cli/crowd.py"], [None]),
         ]}
         self.assertEqual(keys(snap), {"pr-ready:1": "maintainer", "pr-red:2": "author", "pr-protected:3": "human"})
+
+    def test_issue_an_open_pr_closes_is_not_raised(self):
+        # A drafted report must not be drafted again while its PR is open.
+        issues = [issue(8, "FEEDBACK (bug): x", ["crowd:feedback"]),
+                  issue(9, "FEEDBACK (bug): y", ["crowd:feedback"]),
+                  issue(5, "An idea", ["enhancement"])]
+        got = keys({"issues": issues, "prs": [pr(20, [".crowd/tasks/T-002.yaml"], [None], closes=[8, 5])]})
+        self.assertNotIn("feedback:8", got)
+        self.assertNotIn("issue:5", got)
+        self.assertIn("feedback:9", got)
+
+    def test_report_comes_back_when_its_pr_is_gone(self):
+        # The PR closed unmerged: it's no longer in the open list, so the report is raised again.
+        got = keys({"issues": [issue(8, "FEEDBACK (bug): x", ["crowd:feedback"])], "prs": []})
+        self.assertIn("feedback:8", got)
+
+    def test_task_status_is_still_checked_when_a_pr_closes_it(self):
+        issues = [issue(1, "T-001: x", ["crowd:task", "status:blocked"])]
+        got = keys({"issues": issues, "prs": [pr(20, ["cli/crowd.py"], [None], closes=[1])]})
+        self.assertIn("blocked:T-001", got)
 
     def test_protected_pr_is_never_ready(self):
         got = keys({"prs": [pr(1, [".github/workflows/gate.yml"], ["SUCCESS"])]})

@@ -67,6 +67,11 @@ def attention(snap, config, now):
     out = []
     ttl = dt.timedelta(hours=float(config.get("lease_ttl_hours") or 24))
     protected = scope_check.protected_paths(config)
+    # Issues an open PR will close ("Closes #N"). Someone is already on them,
+    # so they aren't raised again; this is how a drafted report stops being
+    # drafted twice. If that PR closes unmerged, the issue comes back.
+    handled = {ref.get("number") for p in snap.get("prs") or []
+               for ref in p.get("closingIssuesReferences") or []}
 
     for i in snap.get("issues") or []:
         n, labels, url = i["number"], label_names(i), i.get("url", "")
@@ -82,6 +87,8 @@ def attention(snap, config, now):
                                 f"{tid} lease has been quiet for {hours}h (limit {int(ttl.total_seconds() // 3600)}h)", url))
             elif status is None:
                 out.append(item(f"no-status:{tid}", MAINTAINER, f"{tid} has no status label", url))
+        elif n in handled:
+            continue
         elif FEEDBACK_LABEL in labels:
             out.append(item(f"feedback:{n}", MAINTAINER, f"report #{n} not triaged: {i['title'][:70]}", url))
         else:
@@ -154,7 +161,7 @@ def snapshot(repo):
         "issues": gh_json("issue", "list", "-R", repo, "--state", "open", "--limit", "200",
                           "--json", "number,title,labels,assignees,updatedAt,url"),
         "prs": gh_json("pr", "list", "-R", repo, "--state", "open", "--limit", "100",
-                       "--json", "number,title,headRefName,isDraft,statusCheckRollup,files,url"),
+                       "--json", "number,title,headRefName,isDraft,statusCheckRollup,files,closingIssuesReferences,url"),
         "runs": gh_json("run", "list", "-R", repo, "--branch", branch, "--limit", "30",
                         "--json", "workflowName,status,conclusion,url"),
         "local": local_state(repo, branch),
