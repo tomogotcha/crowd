@@ -24,7 +24,7 @@ You don't need to learn crowd. Your AI agent does. Open an AI coding agent that 
 I want to contribute to <owner/repo> using crowd: https://github.com/tomogotcha/crowd
 
 1. Clone crowd and read its AGENTS.md and PRINCIPLES.md. Follow them.
-2. Check I have python3, git, gh and pyyaml. If gh isn't signed in, tell me to run
+2. Check I have python3 (on Windows: `py -3`), git, gh and pyyaml. If gh isn't signed in, tell me to run
    `gh auth login` myself. Never ask for or type my password.
 3. Run `crowd survey` and show me the machine card before anything else.
 4. Clone <owner/repo>. If it has no .crowd/ folder, it isn't using crowd yet:
@@ -89,6 +89,15 @@ What your agent runs for you. To run them yourself:
 ```bash
 git clone https://github.com/tomogotcha/crowd ~/crowd
 alias crowd='python3 ~/crowd/cli/crowd.py'
+```
+
+#### On Windows
+
+`python3` there is often a Microsoft Store stub, so use the `py` launcher. In PowerShell:
+
+```powershell
+git clone https://github.com/tomogotcha/crowd $HOME\crowd
+function crowd { py -3 $HOME\crowd\cli\crowd.py @args }
 ```
 
 ```bash
