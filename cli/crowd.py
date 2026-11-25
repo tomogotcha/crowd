@@ -17,6 +17,7 @@ with no write access, can take part.
   crowd submit                 push (to your fork if needed) and open the PR
   crowd verify <pr> [--dry-run]   run someone else's PR on this machine, post RESULT
   crowd feedback "text"        report a problem with crowd itself to crowd's repo (P13)
+  crowd watch [--once]         read-only: list what on the board needs someone, and keep watching
   crowd pet                    see how your agent is doing
   crowd feed <tokens>          set today's token budget
   crowd eat <tokens>           log tokens used (until agents report it themselves)
@@ -41,6 +42,7 @@ import board  # noqa: E402
 import plan as gate_plan  # noqa: E402
 import scope_check  # noqa: E402
 from probes import compile as compile_probe  # noqa: E402  (cli/ is on sys.path)
+import watch as watcher  # noqa: E402
 
 HOME = Path(os.environ.get("CROWD_HOME", Path.home() / ".crowd"))
 CARD = HOME / "machine-card.json"
@@ -885,6 +887,14 @@ def cmd_selftest(a):
     print("selftest: all passed")
 
 
+# ---------- watch ----------
+
+def cmd_watch(a):
+    need("gh")
+    sys.exit(watcher.watch(a.repo or upstream_repo(), project_config(), repo_root(),
+                           every=a.every, once=a.once, desktop=a.notify))
+
+
 # ---------- main ----------
 
 def main():
@@ -904,6 +914,12 @@ def main():
     p.add_argument("--command", help="the crowd command you were running, e.g. claim")
     p.add_argument("--share", action="store_true", help="include the project and task id")
     p.add_argument("--dry-run", action="store_true"); p.set_defaults(f=cmd_feedback)
+    p = sub.add_parser("watch", help="read-only: what on the board needs someone")
+    p.add_argument("--repo", help="owner/name; default is this project's board")
+    p.add_argument("--every", type=int, default=60, help="seconds between polls (min 15)")
+    p.add_argument("--once", action="store_true", help="print the list and exit")
+    p.add_argument("--notify", action="store_true", help="desktop notification for new items (macOS)")
+    p.set_defaults(f=cmd_watch)
     p = sub.add_parser("pet"); p.add_argument("--name"); p.set_defaults(f=cmd_pet)
     p = sub.add_parser("feed"); p.add_argument("tokens", type=int); p.set_defaults(f=cmd_feed)
     p = sub.add_parser("eat"); p.add_argument("tokens", type=int); p.set_defaults(f=cmd_eat)

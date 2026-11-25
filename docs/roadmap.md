@@ -32,6 +32,7 @@ Posted as tasks on v0:
 - [ ] Review-by-different-model step
 - [ ] Hardware-class regression runs
 - [ ] Local queue
+- [ ] Maintainer, one rung at a time (`docs/maintainer.md`; rung 0 is `crowd watch`)
 
 **Go if:** the crowd clears its own backlog faster than you could alone.
 
