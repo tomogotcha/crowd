@@ -101,6 +101,7 @@ crowd check                # same gate as CI, locally
 crowd submit               # opens the PR (from your fork if needed)
 crowd feedback "..."       # crowd itself got in the way? tell us, then carry on
 crowd pet                  # how's your little guy doing?
+crowd watch                # owners: what on the board needs someone (read-only)
 ```
 
 Needs Python 3, `git`, and the [GitHub CLI](https://cli.github.com) (`gh`). `pip install pyyaml`.
