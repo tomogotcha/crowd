@@ -129,6 +129,13 @@ def current_task():
     return tid
 
 
+def task_label(tid, title):
+    """The id once, then the title. Drops only a leading copy of this tid (and any
+    ":", "-" or spaces after it); "T-0010: x" is a different id and stays."""
+    rest = re.sub(rf"^{re.escape(tid)}(?=$|[\s:\-])[\s:\-]*", "", title or "").strip()
+    return f"{tid}: {rest}" if rest else tid
+
+
 def find_issue(repo, task_id, state="open"):
     out = run(["gh", "issue", "list", "-R", repo, "--state", state, "--label", TASK_LABEL,
                "--search", f"{task_id} in:title", "--json", "number,title,labels,body", "--limit", "20"])
@@ -504,7 +511,7 @@ def cmd_claim(a):
 
     run(["git", "checkout", "-b", f"crowd/{tid}", base])
     pack = repo_root() / ".crowd" / "packs" / f"{tid}.md"
-    print(f"Claimed {tid}: {issue['title']}  (base {base[:9]})")
+    print(f"Claimed {task_label(tid, issue['title'])}  (base {base[:9]})")
     print(f"Context pack: {pack if pack.exists() else '(none yet: read the task in .crowd/tasks/ or issue #' + str(issue['number']) + ')'}")
     st = load(STATE, {})
     st.update({"task": tid, "repo": repo, "issue": issue["number"], "base": base})
