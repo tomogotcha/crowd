@@ -1,0 +1,12 @@
+# The maintainer's switches (docs/maintainer.md, D-15).
+# Protected file: only a human changes it. The maintainer reads it from the
+# default branch on every loop, so a PR can't change the rules that judge it.
+
+enabled: true          # false = pause. It does nothing at all, dry runs included.
+
+rung: 1                # 0 watch, 1 propose (--dry-run), 2 comment, 3 merge.
+                       # Only a human raises it. Anyone with write access may lower it.
+
+login: ""              # the maintainer's bot account. It never merges a PR this account wrote.
+
+max_actions_per_day: 20  # over the cap it checkpoints and stops (enforced from rung 2)
