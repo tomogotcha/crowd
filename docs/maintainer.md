@@ -38,7 +38,7 @@ The watcher already produces the input: a list of things that need someone, each
 
 | Watcher item | Maintainer action | How it writes |
 |---|---|---|
-| `feedback:N` (report not triaged) | Group with duplicates. Draft a task: yaml, context pack, a failing test. | A PR adding the task files. A human merges it; the task is posted from the merged file. |
+| `feedback:N` (report not triaged) | Group with duplicates. Draft a task: yaml, context pack, a failing test. | A PR adding the task files, with `Closes #N` for every report it covers. A human merges it; the task is posted from the merged file. |
 | `stale-lease:T` | Expire the lease. Checkpoints stay with the task. | Typed comment `LEASE EXPIRED:`. The board applies it (D-12). |
 | `no-status:T` | Ask the board to rebuild status from the comment history. | Typed comment `/resync`. |
 | `pr-ready:N` (green, no protected paths) | Ask for review by a different model than the author's (D-08). If it approves, add to the merge queue. | Typed comment `REVIEW REQUEST:`, then the merge queue. |
@@ -49,12 +49,15 @@ The watcher already produces the input: a list of things that need someone, each
 
 Items tagged `human` (blocked questions, protected-path PRs, issues that aren't tasks yet) are left alone and shown in the digest.
 
+**Drafting once.** `Closes #N` is how a report counts as handled. The watcher doesn't raise an issue that an open PR will close, so a report isn't drafted twice. If the draft merges, GitHub closes the report. If a human closes the draft unmerged, the report comes back, and the maintainer must not simply draft it again (see below).
+
 ## What it never does
 
 Enforced by the gate and the board, not by asking it nicely:
 
 - Merge or approve anything on a protected path, its own code included.
 - Approve a PR it wrote, or review with the same model as the author.
+- Redraft a report after a human closed its draft unmerged. That was a decision; it posts an `ESCALATION:` asking what was wrong instead. (`decide()` needs the report's closed PRs as input for this; the watcher doesn't read them yet.)
 - Edit labels or assignees directly. Typed comments only; the board is the only writer (D-12).
 - Edit a test to make it pass, or change a task's scope or acceptance.
 - Write to a project whose owner hasn't opted in (P12).
