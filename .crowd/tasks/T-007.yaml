@@ -1,0 +1,64 @@
+# Maintainer, rung 1 (docs/maintainer.md, D-15). Protected: a human reviews it.
+# Same file as T-006, so it waits for T-006 to merge.
+id: T-007
+title: crowd maintain --dry-run
+type: implement
+status: open
+serves: [P7, P13]
+parent: null
+depends_on: [T-006]
+
+goal: >
+  `crowd maintain --dry-run` prints what the maintainer would do right now
+  and writes nothing anywhere. It reads the policy from the default branch,
+  takes the watcher's attention list, gathers facts for green PRs, calls
+  decide(), and prints one line per action, marking actions above the
+  policy's rung. Without --dry-run, `crowd maintain` refuses: only rung 1 is
+  built. Add load_policy, pr_facts and render (pure, tested) and dry_run
+  (the I/O) to cli/maintain.py, and the `maintain` subcommand to
+  cli/crowd.py.
+
+interface:
+  file: cli/maintain.py
+  signature: |
+    def load_policy(text: str) -> dict
+        # yaml text -> {"enabled": bool, "rung": 0..3, "login": str, "max_actions_per_day": int}
+        # enabled is True only if the yaml says exactly `true`; empty/broken/not a mapping -> paused
+        # bad or out-of-range rung -> 0; defaults: rung 0, login "", max_actions_per_day 20
+    def pr_facts(pr: dict) -> dict
+        # gh pr view --json author,body,reviews -> {"author", "author_model", "approvals"}
+        # models come from a "Model: <name>" line (PR body for the author, review body for reviewers)
+        # approvals: reviewers whose latest review is APPROVED, in first-review order
+    def render(actions: list, rung: int) -> list[str]
+        # "would {kind} {target}: {why}", plus "  (needs rung {r}; now {rung})" when r > rung
+        # no actions -> ["nothing to do"]
+    def dry_run(repo: str, config: dict) -> int
+        # I/O: policy from the default branch, watch.snapshot + watch.attention,
+        # pr_facts for each pr-ready item, decide, print. Writes nothing.
+  also:
+    file: cli/crowd.py
+    signature: |
+      # subcommand: crowd maintain [--dry-run] [--repo owner/name]
+      # without --dry-run: exit non-zero with a message naming --dry-run, before any network call
+
+scope:
+  allow: [cli/maintain.py, cli/crowd.py]
+  locked_regions: [cli/maintain.py#decide]
+
+acceptance:
+  tests: [tests/test_maintain_dry_run.py, tests/test_maintain_decide.py]
+  must_pass: [unit]
+  max_diff_lines: 150
+
+requires: {}
+prefers: []
+
+budget:
+  tokens: 120000
+  steps: 35
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: true
+context_pack: .crowd/packs/T-007.md

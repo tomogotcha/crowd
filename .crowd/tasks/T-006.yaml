@@ -1,0 +1,59 @@
+# Maintainer, rung 1 (docs/maintainer.md, D-15). Protected: a human reviews it.
+id: T-006
+title: The maintainer's decide()
+type: implement
+status: open
+serves: [P7, P13]
+parent: null
+depends_on: []
+
+goal: >
+  Create cli/maintain.py with decide(items, policy, facts): a pure function
+  from the watcher's attention items to proposed actions. It only acts on
+  items tagged "maintainer"; a paused or missing policy gives nothing. Every
+  action is returned whatever the rung (the rung limits what runs, later, not
+  what is proposed). A green PR becomes "merge" only when someone other than
+  the author and the maintainer approved it with a known model different from
+  the author's known model, and it isn't on a protected path; otherwise
+  "request-review". A report whose draft a human closed unmerged becomes
+  "escalate", never a second draft. No I/O, no clock, inputs not modified.
+
+interface:
+  file: cli/maintain.py
+  signature: |
+    RUNG = {"draft-task": 2, "escalate": 2, "expire-lease": 2,
+            "resync": 2, "request-review": 2, "merge": 3}
+    def decide(items: list[dict], policy: dict, facts: dict) -> list[dict]
+        # items: crowd watch items {"key", "who", "text", "url"}
+        # policy: .crowd/policy/maintainer.yaml as a dict; acts only if policy.get("enabled") is True
+        # facts: {"prs": {number: {"author": str, "author_model": str|None,
+        #                          "approvals": [{"by": str, "model": str|None}]}},
+        #         "closed_drafts": set of report numbers}   (both keys optional)
+        # returns [{"kind", "target", "rung", "why"}] in item order
+        #   feedback:N    -> draft-task "#N", or escalate "#N" if N in closed_drafts
+        #   stale-lease:T -> expire-lease "T"
+        #   no-status:T   -> resync "T"
+        #   pr-ready:N    -> merge "#N" if allowed (see goal), else request-review "#N"
+        # models compare case-insensitively, ignoring surrounding spaces
+
+scope:
+  allow: [cli/maintain.py]
+  locked_regions: []
+
+acceptance:
+  tests: [tests/test_maintain_decide.py]
+  must_pass: [unit]
+  max_diff_lines: 120
+
+requires: {}
+prefers: []
+
+budget:
+  tokens: 100000
+  steps: 30
+
+lease: { holder: null, ttl_hours: 24, base_commit: null }
+tier: 1
+redundancy: 1
+protected: true
+context_pack: .crowd/packs/T-006.md

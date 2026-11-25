@@ -26,6 +26,8 @@ protected_paths:       # added to the built-in list (.github/, PRINCIPLES.md, cl
   - PRINCIPLES.md
   - cli/gate/
   - .crowd/policy/
+  - cli/maintain.py      # the maintainer can propose changes to itself, never approve them (D-15)
+  - docs/maintainer.md
 
 labels:
   task: "crowd:task"

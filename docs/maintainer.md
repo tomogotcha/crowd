@@ -1,6 +1,6 @@
 # Maintainer
 
-**Status: design. Nothing here is built except rung 0 (`crowd watch`).** Proposed as a decision (D-15); the owner signs off before any of it is posted as tasks.
+**Status: accepted as D-15. Built: rung 0 (`crowd watch`) and the policy file. Rung 1 (`decide()`, `crowd maintain --dry-run`) is posted as T-006 and T-007.**
 
 ## What it is
 
@@ -19,7 +19,7 @@ So yes, it is recursive: crowd builds the maintainer, and the maintainer maintai
 
 A loop that can approve its own changes will loosen its own checks (P7, D-07). Three rules give it a floor:
 
-1. **It can propose changes to itself, never approve them.** `cli/maintain.py` and `.crowd/policy/maintainer.yaml` become protected paths. A human reviews every change to them.
+1. **It can propose changes to itself, never approve them.** `cli/maintain.py`, this doc and `.crowd/policy/maintainer.yaml` are protected paths. A human reviews every change to them.
 2. **It runs from the default branch only.** Same trick as the gate: a PR can't change the maintainer that judges it.
 3. **It never touches the other protected paths either**: gate, workflows, principles, policy. For those it can only say "a human is needed" and link the PR.
 
@@ -73,7 +73,7 @@ Each rung is a setting in the policy file. Only a human raises it. Go/no-go afte
 | Rung | It may | Go if |
 |---|---|---|
 | 0. Watch | Read. (`crowd watch`, built.) | The list matches what you'd have noticed yourself. |
-| 1. Propose | Print what it would do: `crowd maintain --dry-run`. Writes nothing. | Two weeks of proposals: you'd have done the same for 9 in 10, and none broke a "never" rule. |
+| 1. Propose | Print what it would do: `crowd maintain --dry-run`. Writes nothing. Shows every action, including ones above its rung. | Its proposals match what you did on the next 10 board items, and none broke a "never" rule. If its merge calls match too, you may skip straight to 3 for merges. |
 | 2. Comment | Post typed comments and open task-draft PRs. Humans merge everything. | Drafted tasks merge with small edits; no bad lease expiries. |
 | 3. Merge | Queue green, reviewed, unprotected PRs. Open reverts. | Rework and revert rates no worse than when you merged by hand. |
 
@@ -95,14 +95,15 @@ It keeps no memory of its own (P1). What it knows is the watcher log, the issue 
 
 ## First tasks
 
-To post once the design is approved, in this order:
+In this order:
 
-1. Policy file and schema (`.crowd/policy/maintainer.yaml`); add it and `cli/maintain.py` to protected paths. *Protected.*
-2. `decide()`: watcher items → proposed actions, pure, with tests for every "never" rule.
-3. `crowd maintain --dry-run` (rung 1).
-4. Board: `LEASE EXPIRED:` and `/resync`. *Protected.*
-5. Feedback grouping and task drafting.
-6. Gate: block approval by the PR's author or author's model. *Protected.*
+1. ~~Policy file; `cli/maintain.py` and this doc become protected paths.~~ Done with D-15.
+2. T-006: `decide()`: watcher items → proposed actions, pure, with tests for every "never" rule. *Protected.*
+3. T-007: `crowd maintain --dry-run` (rung 1). *Protected.*
+4. `crowd submit` records the author's model in the PR, and a review command records the reviewer's. Until then no PR can show two different models, so `decide()` never proposes a merge.
+5. Board: `LEASE EXPIRED:` and `/resync`. *Protected.*
+6. Feedback grouping and task drafting.
+7. Gate: block approval by the PR's author or author's model. *Protected.*
 
 ## Open questions for the owner
 

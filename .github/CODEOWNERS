@@ -4,3 +4,5 @@
 /cli/gate/          @tomogotcha
 /.crowd/policy/     @tomogotcha
 /.crowd/config.yaml @tomogotcha
+/cli/maintain.py    @tomogotcha
+/docs/maintainer.md @tomogotcha
